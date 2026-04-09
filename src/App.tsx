@@ -1,10 +1,12 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Center } from '@react-three/drei';
+import SceneControls from './components/SceneControls';
 import PortalScene from './components/PortalScene';
 
 function App() {
     return (
         <Canvas>
+            <SceneControls />
             <OrbitControls />
             <Center>
                 <PortalScene />

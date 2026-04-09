@@ -4,6 +4,7 @@ import { useLoader } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import Fireflies from './Fireflies/Fireflies';
 
 function PortalScene() {
 
@@ -47,7 +48,12 @@ function PortalScene() {
 
     }, [gltf, bakedMaterial, poleLightMaterial, portalLightMaterial])
 
-    return <primitive object={gltf.scene} />;
+    return (
+        <>
+            <Fireflies />
+            <primitive object={gltf.scene} />
+        </>
+    )
 }
 
 export default PortalScene;
