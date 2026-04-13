@@ -7,7 +7,10 @@ function App() {
     return (
         <Canvas>
             <SceneControls />
-            <OrbitControls />
+            <OrbitControls 
+                minPolarAngle={Math.PI / 4}
+                maxPolarAngle={Math.PI / 2 + 0.15}
+            />
             <Center>
                 <PortalScene />
             </Center>

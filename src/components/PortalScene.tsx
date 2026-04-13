@@ -1,10 +1,15 @@
-import { useEffect, useMemo } from 'react';
-import { MeshBasicMaterial, Mesh, SRGBColorSpace, DoubleSide } from 'three';
-import { useLoader } from '@react-three/fiber';
+import { useEffect, useMemo, useRef } from 'react';
+import { MeshBasicMaterial, ShaderMaterial, Mesh, SRGBColorSpace, DoubleSide } from 'three';
+import { extend, useLoader, useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader';
+import { PORTAL_COLORS } from '../constants/portalColors';
+import gui from '../lib/gui';
+import PortalLightMaterial from './PortalLightMaterial';
 import Fireflies from './Fireflies/Fireflies';
+
+extend({ PortalLightMaterial });
 
 function PortalScene() {
 
@@ -31,22 +36,61 @@ function PortalScene() {
     );
 
     const portalLightMaterial = useMemo(
-        () => new MeshBasicMaterial({ color: 0xffecec, side: DoubleSide }),
+        () => new PortalLightMaterial({ side: DoubleSide }), 
         []
     );
 
+    const portalMaterialRef = useRef<ShaderMaterial>(null!);
+
     useEffect(() => {
-        const poleLightA = gltf.scene.getObjectByName('poleLightA') as Mesh
-        const poleLightB = gltf.scene.getObjectByName('poleLightB') as Mesh
-        const portalLight = gltf.scene.getObjectByName('portalLight') as Mesh
-        const baked = gltf.scene.getObjectByName('baked') as Mesh
+        const poleLightA = gltf.scene.getObjectByName('poleLightA') as Mesh;
+        const poleLightB = gltf.scene.getObjectByName('poleLightB') as Mesh;
+        const portalLight = gltf.scene.getObjectByName('portalLight') as Mesh;
+        const baked = gltf.scene.getObjectByName('baked') as Mesh;
 
-        if (poleLightA) poleLightA.material = poleLightMaterial
-        if (poleLightB) poleLightB.material = poleLightMaterial
-        if (portalLight) portalLight.material = portalLightMaterial
-        if (baked) baked.material = bakedMaterial
+        if (poleLightA) poleLightA.material = poleLightMaterial;
+        if (poleLightB) poleLightB.material = poleLightMaterial;
+        if (baked) baked.material = bakedMaterial;
 
-    }, [gltf, bakedMaterial, poleLightMaterial, portalLightMaterial])
+        if (portalLight) {
+            portalLight.material = portalLightMaterial;
+            portalMaterialRef.current = portalLight.material as ShaderMaterial;
+        }
+
+    }, [gltf, bakedMaterial, poleLightMaterial, portalLightMaterial]);
+
+    useFrame(({ clock }) => {
+        if (portalMaterialRef.current) portalMaterialRef.current.uniforms.uTime.value = clock.getElapsedTime();
+    });
+
+    const debugObject = useRef({
+        portalColorStart: PORTAL_COLORS.start,
+        portalColorEnd: PORTAL_COLORS.end
+    });
+
+    useEffect(() => {
+        if (!gui) return;
+
+        const folder = gui.addFolder('Portal');
+
+        folder
+            .addColor(debugObject.current, 'portalColorStart')
+            .onChange(() => {
+                portalLightMaterial.uniforms.uColorStart.value.set(
+                    debugObject.current.portalColorStart
+                );
+            });
+
+        folder
+            .addColor(debugObject.current, 'portalColorEnd')
+            .onChange(() => {
+                portalLightMaterial.uniforms.uColorEnd.value.set(
+                    debugObject.current.portalColorEnd
+                );
+            });
+
+        return () => folder.destroy();
+    }, [portalLightMaterial]);
 
     return (
         <>
@@ -56,4 +100,4 @@ function PortalScene() {
     )
 }
 
-export default PortalScene;
+export default PortalScene

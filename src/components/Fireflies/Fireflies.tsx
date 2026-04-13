@@ -1,17 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { useFrame, extend } from '@react-three/fiber';
 import { ShaderMaterial, AdditiveBlending } from 'three';
+import gui from '../../lib/gui';
 import FireflyMaterial from './FireflyMaterial';
 
-extend({ FireflyMaterial })
+type FireflyMaterialType = ShaderMaterial & { uSize: number };
+
+extend({ FireflyMaterial });
 
 function Fireflies() {
 
-    const materialRef = useRef<ShaderMaterial>(null!);
+    const materialRef = useRef<FireflyMaterialType>(null!);
     const firefliesCount = 30;
 
-    useFrame((state) => {
-        if (materialRef.current) materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+    useFrame(({clock}) => {
+        if (materialRef.current) materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
     });
 
     const [positions] = useState(() => {
@@ -37,20 +40,19 @@ function Fireflies() {
     })
 
     useEffect(() => {
-        if (!import.meta.env.VITE_ENABLE_GUI) return
+        if (!gui || !materialRef.current) return;
 
-        import('dat.gui').then((dat) => {
-            const gui = new dat.GUI()
-            if (materialRef.current) {
-                gui
-                    .add(materialRef.current, 'uSize')
-                    .min(0)
-                    .max(500)
-                    .step(1)
-                    .name('firefliesSize')
-            }
-        })
-    }, [])
+        const folder = gui.addFolder('Fireflies');
+
+        folder
+            .add(materialRef.current, 'uSize')
+            .min(0)
+            .max(500)
+            .step(1)
+            .name('firefliesSize');
+
+        return () => folder.destroy();
+    }, []);
 
     return (
         <points>

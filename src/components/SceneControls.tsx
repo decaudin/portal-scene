@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
+import gui from '../lib/gui';
 
 function SceneControls() {
 
@@ -7,17 +8,18 @@ function SceneControls() {
     const debugObject = useRef({ clearColor: '#201919' });
 
     useEffect(() => {
-        if (!import.meta.env.VITE_ENABLE_GUI) return;
+        if (!gui) return;
 
-        import('dat.gui').then((dat) => {
-            const gui = new dat.GUI();
-            gui.addColor(debugObject.current, 'clearColor').onChange(() => {
-                gl.setClearColor(debugObject.current.clearColor);
-            });
-        });
+        const folder = gui.addFolder('Scene');
+
+        folder
+            .addColor(debugObject.current, 'clearColor')
+            .onChange(() => gl.setClearColor(debugObject.current.clearColor));
+
+        return () => folder.destroy();
     }, [gl]);
 
-    return null;
+    return null
 }
 
-export default SceneControls;
+export default SceneControls
